@@ -20,7 +20,7 @@ public class UsersController : Controller
     }
 
     [Produces("application/json", "application/xml")]
-    [HttpGet("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var userEntity = userRepository.FindById(userId);
@@ -32,8 +32,16 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    public IActionResult CreateUser([FromBody] CreateUserDto user)
     {
-        throw new NotImplementedException();
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity(ModelState);
+        }
+        var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = createdUserEntity.Id },
+            createdUserEntity);
     }
 }
