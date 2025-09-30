@@ -13,6 +13,7 @@ builder.Services.AddAutoMapper(cfg =>
     {
         cfg.CreateMap<UserEntity, UserDto>();
         cfg.CreateMap<CreateUserDto, UserEntity>();
+        cfg.CreateMap<PutUserDto, UserEntity>();
     },
     Array.Empty<Assembly>());
 builder.Services.AddControllers(options =>
