@@ -6,7 +6,6 @@ namespace WebApi.MinimalApi.Models;
 public record CreateUserDto
 {
     [Required]
-    [DefaultValue("login")]
     public string Login { get; set; }
 
     [DefaultValue("John")]

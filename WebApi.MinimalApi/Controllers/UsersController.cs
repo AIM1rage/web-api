@@ -31,9 +31,18 @@ public class UsersController : Controller
         return Ok(mapper.Map<UserDto>(userEntity));
     }
 
+    [Produces("application/json", "application/xml")]
     [HttpPost]
     public IActionResult CreateUser([FromBody] CreateUserDto user)
     {
+        if (user is null)
+        {
+            return BadRequest();
+        }
+        if (user.Login?.All(char.IsLetterOrDigit) != true)
+        {
+            ModelState.AddModelError(nameof(user.Login), "Login must contain letters or digits");
+        }
         if (!ModelState.IsValid)
         {
             return UnprocessableEntity(ModelState);
@@ -42,6 +51,6 @@ public class UsersController : Controller
         return CreatedAtRoute(
             nameof(GetUserById),
             new { userId = createdUserEntity.Id },
-            createdUserEntity);
+            createdUserEntity.Id);
     }
 }
