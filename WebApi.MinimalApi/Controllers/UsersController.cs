@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
@@ -32,7 +33,7 @@ public class UsersController : Controller
         {
             return NotFound();
         }
-        
+
         if (HttpMethods.IsHead(Request.Method))
         {
             var acceptHeader = Request.Headers.Accept.ToString();
@@ -67,22 +68,22 @@ public class UsersController : Controller
             new { userId = createdUserEntity.Id },
             createdUserEntity.Id);
     }
-    
+
     [HttpGet]
     [Produces("application/json", "application/xml")]
-    public ActionResult<IEnumerable<Models.UserDto>> GetUsers(
+    public ActionResult<IEnumerable<UserDto>> GetUsers(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         const int defaultPageNumber = 1;
         const int maxPageSize = 20;
-        
+
         pageNumber = Math.Max(pageNumber, defaultPageNumber);
         pageSize = Math.Clamp(pageSize, 1, maxPageSize);
-        
+
         var pageList = userRepository.GetPage(pageNumber, pageSize);
         var users = mapper.Map<IEnumerable<UserDto>>(pageList);
-        
+
         var paginationHeader = new
         {
             previousPageLink = pageList.HasPrevious
@@ -101,7 +102,7 @@ public class UsersController : Controller
 
         return Ok(users);
     }
-    
+
     [HttpOptions]
     public IActionResult Options()
     {
@@ -112,9 +113,9 @@ public class UsersController : Controller
 
     [Produces("application/json", "application/xml")]
     [HttpPut("{userId}")]
-    public IActionResult UpdateUser([FromBody] PutUserDto putUserDto , [FromRoute] Guid userId)
+    public IActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto, [FromRoute] Guid userId)
     {
-        if (putUserDto is null || userId == Guid.Empty)
+        if (updateUserDto is null || userId == Guid.Empty)
         {
             return BadRequest();
         }
@@ -123,8 +124,8 @@ public class UsersController : Controller
         {
             return UnprocessableEntity(ModelState);
         }
-        
-        var createdUserEntity = mapper.Map(new UserEntity(userId), mapper.Map<UserEntity>(putUserDto));
+
+        var createdUserEntity = mapper.Map(new UserEntity(userId), mapper.Map<UserEntity>(updateUserDto));
 
         userRepository.UpdateOrInsert(createdUserEntity, out var isInsert);
 
@@ -132,10 +133,33 @@ public class UsersController : Controller
         {
             return NoContent();
         }
-        
-        return CreatedAtAction(nameof(GetUserById), new { userId = createdUserEntity.Id }, createdUserEntity.Id);
+
+        return CreatedAtRoute(nameof(GetUserById), new { userId = createdUserEntity.Id }, createdUserEntity.Id);
     }
-    
+
+    [Produces("application/json", "application/xml")]
+    [HttpPatch("{userId:guid}")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
+    {
+        if (patchDoc is null)
+        {
+            return BadRequest();
+        }
+        var userEntity = userRepository.FindById(userId);
+        if (userEntity is null)
+        {
+            return NotFound();
+        }
+        var patchUserDto = mapper.Map<UpdateUserDto>(userEntity);
+        patchDoc.ApplyTo(patchUserDto, ModelState);
+        if (!TryValidateModel(patchUserDto))
+        {
+            return UnprocessableEntity(ModelState);
+        }
+        userRepository.Update(mapper.Map<UserEntity>(patchUserDto));
+        return NoContent();
+    }
+
     [Produces("application/json", "application/xml")]
     [HttpDelete("{userId}")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
@@ -145,7 +169,7 @@ public class UsersController : Controller
         {
             return NotFound();
         }
-        
+
         userRepository.Delete(userId);
         return NoContent();
     }

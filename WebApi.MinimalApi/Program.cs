@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
@@ -13,7 +12,7 @@ builder.Services.AddAutoMapper(cfg =>
     {
         cfg.CreateMap<UserEntity, UserDto>();
         cfg.CreateMap<CreateUserDto, UserEntity>();
-        cfg.CreateMap<PutUserDto, UserEntity>();
+        cfg.CreateMap<UpdateUserDto, UserEntity>().ReverseMap();
     },
     Array.Empty<Assembly>());
 builder.Services.AddControllers(options =>
