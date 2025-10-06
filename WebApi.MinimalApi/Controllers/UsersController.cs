@@ -150,13 +150,13 @@ public class UsersController : Controller
         {
             return NotFound();
         }
-        var patchUserDto = mapper.Map<UpdateUserDto>(userEntity);
-        patchDoc.ApplyTo(patchUserDto, ModelState);
-        if (!TryValidateModel(patchUserDto))
+        var updateUserDto = mapper.Map<UpdateUserDto>(userEntity);
+        patchDoc.ApplyTo(updateUserDto, ModelState);
+        if (!TryValidateModel(updateUserDto))
         {
             return UnprocessableEntity(ModelState);
         }
-        userRepository.Update(mapper.Map<UserEntity>(patchUserDto));
+        userRepository.Update(mapper.Map<UserEntity>(updateUserDto));
         return NoContent();
     }
 

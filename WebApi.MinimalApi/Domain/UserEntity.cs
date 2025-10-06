@@ -26,6 +26,7 @@ public class UserEntity
     {
         get;
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local For MongoDB
+        private set;
     }
 
     /// <summary>
