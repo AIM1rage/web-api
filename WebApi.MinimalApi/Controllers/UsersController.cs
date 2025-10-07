@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+using Swashbuckle.Swagger.Annotations;
 
 namespace WebApi.MinimalApi.Controllers;
 
@@ -164,9 +165,15 @@ public class UsersController : Controller
         userRepository.Update(mapper.Map<UserEntity>(updateUserDto));
         return NoContent();
     }
-
-    [Produces("application/json", "application/xml")]
+    
+    /// <summary>
+    /// Удалить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
     [HttpDelete("{userId}")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(204, "Пользователь удален")]
+    [SwaggerResponse(404, "Пользователь не найден")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
     {
         var userEntity = userRepository.FindById(userId);
