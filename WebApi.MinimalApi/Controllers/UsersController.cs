@@ -23,6 +23,11 @@ public class UsersController : Controller
         this.linkGenerator = linkGenerator;
     }
 
+    /// <summary>
+    /// Получить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <returns></returns>
     [Produces("application/json", "application/xml")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [HttpHead("{userId}")]
