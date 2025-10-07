@@ -28,10 +28,11 @@ public class UsersController : Controller
     /// Получить пользователя
     /// </summary>
     /// <param name="userId">Идентификатор пользователя</param>
-    /// <returns></returns>
-    [Produces("application/json", "application/xml")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [HttpHead("{userId}")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(200, "OK", typeof(UserDto))]
+    [SwaggerResponse(404, "Пользователь не найден")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var userEntity = userRepository.FindById(userId);
@@ -56,8 +57,27 @@ public class UsersController : Controller
         return Ok(mapper.Map<UserDto>(userEntity));
     }
 
-    [Produces("application/json", "application/xml")]
+    /// <summary>
+    /// Создать пользователя
+    /// </summary>
+    /// <remarks>
+    /// Пример запроса:
+    ///
+    ///     POST /api/users
+    ///     {
+    ///        "login": "johndoe375",
+    ///        "firstName": "John",
+    ///        "lastName": "Doe"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="user">Данные для создания пользователя</param>
     [HttpPost]
+    [Consumes("application/json")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(201, "Пользователь создан")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult CreateUser([FromBody] CreateUserDto user)
     {
         if (user is null)
@@ -165,8 +185,18 @@ public class UsersController : Controller
         return CreatedAtRoute(nameof(GetUserById), new { userId = createdUserEntity.Id }, createdUserEntity.Id);
     }
 
-    [Produces("application/json", "application/xml")]
+    /// <summary>
+    /// Частично обновить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="patchDoc">JSON Patch для пользователя</param>
     [HttpPatch("{userId:guid}")]
+    [Consumes("application/json-patch+json")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(204, "Пользователь обновлен")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(404, "Пользователь не найден")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
     {
         if (patchDoc is null)
