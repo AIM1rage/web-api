@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
-using Swashbuckle.Swagger.Annotations;
 
 namespace WebApi.MinimalApi.Controllers;
 
@@ -218,7 +217,7 @@ public class UsersController : Controller
         userRepository.Update(mapper.Map<UserEntity>(updateUserDto));
         return NoContent();
     }
-    
+
     /// <summary>
     /// Удалить пользователя
     /// </summary>
