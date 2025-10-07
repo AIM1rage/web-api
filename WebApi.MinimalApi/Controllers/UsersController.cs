@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -23,9 +24,15 @@ public class UsersController : Controller
         this.linkGenerator = linkGenerator;
     }
 
-    [Produces("application/json", "application/xml")]
+    /// <summary>
+    /// Получить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [HttpHead("{userId}")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(200, "OK", typeof(UserDto))]
+    [SwaggerResponse(404, "Пользователь не найден")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var userEntity = userRepository.FindById(userId);
@@ -50,8 +57,27 @@ public class UsersController : Controller
         return Ok(mapper.Map<UserDto>(userEntity));
     }
 
-    [Produces("application/json", "application/xml")]
+    /// <summary>
+    /// Создать пользователя
+    /// </summary>
+    /// <remarks>
+    /// Пример запроса:
+    ///
+    ///     POST /api/users
+    ///     {
+    ///        "login": "johndoe375",
+    ///        "firstName": "John",
+    ///        "lastName": "Doe"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="user">Данные для создания пользователя</param>
     [HttpPost]
+    [Consumes("application/json")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(201, "Пользователь создан")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult CreateUser([FromBody] CreateUserDto user)
     {
         if (user is null)
@@ -69,6 +95,13 @@ public class UsersController : Controller
             createdUserEntity.Id);
     }
 
+    /// <summary>
+    /// Получить список пользователей с пагинацией
+    /// </summary>
+    /// <param name="pageNumber">Номер страницы</param>
+    /// <param name="pageSize">Размер страницы</param>
+    /// <returns>Список пользователей с информацией о пагинации в заголовках</returns>
+    [SwaggerResponse(200, "Возвращает список пользователей", typeof(IEnumerable<UserDto>))]
     [HttpGet]
     [Produces("application/json", "application/xml")]
     public ActionResult<IEnumerable<UserDto>> GetUsers(
@@ -103,6 +136,11 @@ public class UsersController : Controller
         return Ok(users);
     }
 
+    /// <summary>
+    /// Получить поддерживаемые методы HTTP для данного endpoint
+    /// </summary>
+    /// <returns>Информация о доступных HTTP методах</returns>
+    [SwaggerResponse(200, "Возвращает список доступных методов в заголовке Allow")]
     [HttpOptions]
     public IActionResult Options()
     {
@@ -111,6 +149,16 @@ public class UsersController : Controller
         return Ok();
     }
 
+    /// <summary>
+    /// Обновить или создать пользователя
+    /// </summary>
+    /// <param name="updateUserDto">Данные для обновления пользователя</param>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <returns>Результат операции обновления</returns>
+    [SwaggerResponse(204, "Пользователь успешно обновлен")]
+    [SwaggerResponse(201, "Пользователь создан")]
+    [SwaggerResponse(400, "Неверные входные данные")]
+    [SwaggerResponse(422, "Ошибка валидации данных")]
     [Produces("application/json", "application/xml")]
     [HttpPut("{userId}")]
     public IActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto, [FromRoute] Guid userId)
@@ -137,8 +185,18 @@ public class UsersController : Controller
         return CreatedAtRoute(nameof(GetUserById), new { userId = createdUserEntity.Id }, createdUserEntity.Id);
     }
 
-    [Produces("application/json", "application/xml")]
+    /// <summary>
+    /// Частично обновить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="patchDoc">JSON Patch для пользователя</param>
     [HttpPatch("{userId:guid}")]
+    [Consumes("application/json-patch+json")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(204, "Пользователь обновлен")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(404, "Пользователь не найден")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
     {
         if (patchDoc is null)
@@ -160,8 +218,14 @@ public class UsersController : Controller
         return NoContent();
     }
 
-    [Produces("application/json", "application/xml")]
+    /// <summary>
+    /// Удалить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
     [HttpDelete("{userId}")]
+    [Produces("application/json", "application/xml")]
+    [SwaggerResponse(204, "Пользователь удален")]
+    [SwaggerResponse(404, "Пользователь не найден")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
     {
         var userEntity = userRepository.FindById(userId);
