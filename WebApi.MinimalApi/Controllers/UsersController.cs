@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -74,6 +75,13 @@ public class UsersController : Controller
             createdUserEntity.Id);
     }
 
+    /// <summary>
+    /// Получить список пользователей с пагинацией
+    /// </summary>
+    /// <param name="pageNumber">Номер страницы</param>
+    /// <param name="pageSize">Размер страницы</param>
+    /// <returns>Список пользователей с информацией о пагинации в заголовках</returns>
+    [SwaggerResponse(200, "Возвращает список пользователей", typeof(IEnumerable<UserDto>))]
     [HttpGet]
     [Produces("application/json", "application/xml")]
     public ActionResult<IEnumerable<UserDto>> GetUsers(
@@ -108,6 +116,11 @@ public class UsersController : Controller
         return Ok(users);
     }
 
+    /// <summary>
+    /// Получить поддерживаемые методы HTTP для данного endpoint
+    /// </summary>
+    /// <returns>Информация о доступных HTTP методах</returns>
+    [SwaggerResponse(200, "Возвращает список доступных методов в заголовке Allow")]
     [HttpOptions]
     public IActionResult Options()
     {
@@ -116,6 +129,16 @@ public class UsersController : Controller
         return Ok();
     }
 
+    /// <summary>
+    /// Обновить или создать пользователя
+    /// </summary>
+    /// <param name="updateUserDto">Данные для обновления пользователя</param>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <returns>Результат операции обновления</returns>
+    [SwaggerResponse(204, "Пользователь успешно обновлен")]
+    [SwaggerResponse(201, "Пользователь создан")]
+    [SwaggerResponse(400, "Неверные входные данные")]
+    [SwaggerResponse(422, "Ошибка валидации данных")]
     [Produces("application/json", "application/xml")]
     [HttpPut("{userId}")]
     public IActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto, [FromRoute] Guid userId)
